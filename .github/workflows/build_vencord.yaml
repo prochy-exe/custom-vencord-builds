@@ -1,0 +1,39 @@
+name: Build Vencord
+
+on:
+    push:
+    workflow_dispatch:
+
+permissions:                # Job-level permissions configuration starts here
+    contents: write           # 'write' access to repository contents
+
+jobs:
+    build-vencord:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                repository: "prochy-exe/Vencord"
+                ref: "main"
+
+            - name: Install dependencies
+              uses: pnpm/action-setup@v4 # Install pnpm using packageManager key in package.json
+              with:
+                run_install: |
+                    args: ["--frozen-lockfile"]
+
+            - name: Use Node.js 20
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: "pnpm"
+
+            - name: Build platform packages
+              run: pnpm build
+
+            - name: Create release
+              uses: ncipollo/release-action@v1.14.0
+              with:
+                  allowUpdates: true
+                  name: latest
+                  artifacts: dist/*
